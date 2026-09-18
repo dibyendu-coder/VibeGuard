@@ -1,0 +1,10 @@
+name: Deploy
+on: push
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Print Credentials
+        run: echo ${{ secrets.AWS_SECRET_ACCESS_KEY }}

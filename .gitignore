@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.vibeguard/
+*.log
+coverage/
+.DS_Store
