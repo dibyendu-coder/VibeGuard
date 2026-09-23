@@ -234,6 +234,8 @@ export async function runScan(
         suppressedFindings: existingCount + suppression.suppressedCount,
       };
       deduplicatedFindings = newFindings;
+    } else {
+      console.warn(`[VibeGuard] Warning: Baseline file '${options.baseline}' could not be loaded or does not exist.`);
     }
   } else if (suppression.suppressedCount > 0) {
     baselineStatus = {

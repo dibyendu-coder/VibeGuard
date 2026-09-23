@@ -31,12 +31,15 @@ export function getScanFiles(
       const relPath = relDir ? path.join(relDir, entry.name).replace(/\\/g, '/') : entry.name;
       const baseName = entry.name;
 
-      if (ignored.has(baseName) || ignored.has(relPath)) {
+      const normRel = relPath.replace(/\\/g, '/');
+      if (ignored.has(baseName) || ignored.has(normRel)) {
         continue;
       }
       let shouldSkip = false;
       for (const pattern of ignored) {
-        if (relPath === pattern || relPath.startsWith(pattern + '/') || relPath.startsWith(pattern + path.sep)) {
+        const normPattern = pattern.replace(/\\/g, '/').replace(/^\//, '').replace(/\/$/, '');
+        if (!normPattern) continue;
+        if (normRel === normPattern || normRel.startsWith(normPattern + '/')) {
           shouldSkip = true;
           break;
         }

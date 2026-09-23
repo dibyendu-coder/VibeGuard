@@ -10,10 +10,11 @@ export function generateFingerprint(
   ruleId: string,
   filePath: string,
   categoryOrLine?: string | number,
-  snippet?: string
+  snippet?: string | number
 ): string {
-  const normalizedPath = filePath.replace(/\\/g, '/');
-  const normalizedSnippet = (snippet || '').trim().replace(/\s+/g, ' ');
+  const normalizedPath = (filePath || '').replace(/\\/g, '/');
+  const snippetStr = typeof snippet === 'string' ? snippet : typeof snippet === 'number' ? String(snippet) : '';
+  const normalizedSnippet = snippetStr.trim().replace(/\s+/g, ' ');
   const category = typeof categoryOrLine === 'string' ? categoryOrLine : '';
   const raw = `${ruleId}:${normalizedPath}:${category}:${normalizedSnippet}`;
   return crypto.createHash('sha256').update(raw).digest('hex').substring(0, 16);

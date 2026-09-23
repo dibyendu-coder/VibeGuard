@@ -51,9 +51,14 @@ export function filterSuppressedFindings(
     // 2. Check inline file comments if file is available
     if (finding.file) {
       try {
-        const fullPath = path.isAbsolute(finding.file)
-          ? finding.file
-          : path.join(projectRoot, finding.file);
+        const resolvedRoot = path.resolve(projectRoot);
+        const fullPath = path.resolve(resolvedRoot, finding.file);
+
+        // Security Audit Fix: Ensure target file is strictly within projectRoot
+        if (!fullPath.startsWith(resolvedRoot + path.sep) && fullPath !== resolvedRoot) {
+          activeFindings.push(finding);
+          continue;
+        }
 
         if (fs.existsSync(fullPath)) {
           const content = fs.readFileSync(fullPath, 'utf-8');

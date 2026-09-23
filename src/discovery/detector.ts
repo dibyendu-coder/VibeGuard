@@ -56,11 +56,14 @@ export function discoverProject(targetDir: string, config: VibeGuardConfig): Pro
   }
 
   function shouldIgnore(relativePath: string, basename: string): boolean {
-    if (ignoredPatterns.has(basename) || ignoredPatterns.has(relativePath)) {
+    const normRel = relativePath.replace(/\\/g, '/');
+    if (ignoredPatterns.has(basename) || ignoredPatterns.has(normRel)) {
       return true;
     }
     for (const pattern of ignoredPatterns) {
-      if (relativePath === pattern || relativePath.startsWith(pattern + path.sep) || relativePath.startsWith(pattern + '/')) {
+      const normPattern = pattern.replace(/\\/g, '/').replace(/^\//, '').replace(/\/$/, '');
+      if (!normPattern) continue;
+      if (normRel === normPattern || normRel.startsWith(normPattern + '/')) {
         return true;
       }
     }

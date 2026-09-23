@@ -10,7 +10,12 @@ export function discoverRoutes(files: string[], rootDir: string): RouteDefinitio
 
     // 1. Next.js App Router (app/**/route.ts or route.js)
     if (relPath.match(/^app\/(.+)\/route\.[jt]sx?$/)) {
-      const routePath = '/' + relPath.replace(/^app\//, '').replace(/\/route\.[jt]sx?$/, '');
+      const rawSub = relPath.replace(/^app\//, '').replace(/\/route\.[jt]sx?$/, '');
+      const cleanedSub = rawSub
+        .split('/')
+        .filter((seg) => !(seg.startsWith('(') && seg.endsWith(')')))
+        .join('/');
+      const routePath = '/' + (cleanedSub || '');
       const content = readFileSafe(filePath);
       if (content) {
         const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];

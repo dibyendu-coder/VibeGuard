@@ -42,8 +42,8 @@ export function analyzeDataFlows(files: string[], rootDir: string): DataFlowPath
       // SQL Sink
       if (lineText.match(/db\.(query|execute)|prisma\.\$queryRaw|sequelize\.query|session\.query|SELECT\s+.*FROM/i)) {
         for (const [varName, taint] of variableTaints.entries()) {
-          const varRegex = new RegExp(`\\b${varName}\\b`);
-          if (varRegex.test(lineText)) {
+          const varRegex = createVarRegex(varName);
+          if (varRegex && varRegex.test(lineText)) {
             // Check if string concatenation or template literal is present in line or nearby lines
             if (lineText.includes('+') || lineText.includes('`') || lineText.includes('%') || lineText.includes('.format(') || lineText.includes('f"')) {
               flows.push({
@@ -72,8 +72,8 @@ export function analyzeDataFlows(files: string[], rootDir: string): DataFlowPath
       // Command Execution Sink
       if (lineText.match(/(child_process\.)?(exec|execSync|spawn|spawnSync)|os\.system|subprocess\.(run|Popen|call)/i)) {
         for (const [varName, taint] of variableTaints.entries()) {
-          const varRegex = new RegExp(`\\b${varName}\\b`);
-          if (varRegex.test(lineText)) {
+          const varRegex = createVarRegex(varName);
+          if (varRegex && varRegex.test(lineText)) {
             flows.push({
               id: `flow-exec-${relPath}-${lineNum}`,
               source: {
@@ -99,8 +99,8 @@ export function analyzeDataFlows(files: string[], rootDir: string): DataFlowPath
       // Filesystem Sink
       if (lineText.match(/fs\.(readFile|writeFile|unlink|createReadStream)|open\s*\(/i)) {
         for (const [varName, taint] of variableTaints.entries()) {
-          const varRegex = new RegExp(`\\b${varName}\\b`);
-          if (varRegex.test(lineText)) {
+          const varRegex = createVarRegex(varName);
+          if (varRegex && varRegex.test(lineText)) {
             flows.push({
               id: `flow-fs-${relPath}-${lineNum}`,
               source: {
@@ -126,8 +126,8 @@ export function analyzeDataFlows(files: string[], rootDir: string): DataFlowPath
       // SSRF Sink
       if (lineText.match(/fetch\s*\(|axios\.(get|post)|requests\.(get|post)|urllib/i)) {
         for (const [varName, taint] of variableTaints.entries()) {
-          const varRegex = new RegExp(`\\b${varName}\\b`);
-          if (varRegex.test(lineText)) {
+          const varRegex = createVarRegex(varName);
+          if (varRegex && varRegex.test(lineText)) {
             flows.push({
               id: `flow-ssrf-${relPath}-${lineNum}`,
               source: {
@@ -153,8 +153,8 @@ export function analyzeDataFlows(files: string[], rootDir: string): DataFlowPath
       // XSS Sink
       if (lineText.match(/dangerouslySetInnerHTML|\.innerHTML\s*=|document\.write\s*\(/i)) {
         for (const [varName, taint] of variableTaints.entries()) {
-          const varRegex = new RegExp(`\\b${varName}\\b`);
-          if (varRegex.test(lineText)) {
+          const varRegex = createVarRegex(varName);
+          if (varRegex && varRegex.test(lineText)) {
             flows.push({
               id: `flow-xss-${relPath}-${lineNum}`,
               source: {
@@ -180,6 +180,13 @@ export function analyzeDataFlows(files: string[], rootDir: string): DataFlowPath
   }
 
   return flows;
+}
+
+function createVarRegex(varName: string): RegExp | null {
+  if (!varName || !/^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(varName)) {
+    return null;
+  }
+  return new RegExp(`\\b${varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`);
 }
 
 function readFileSafe(filePath: string): string | null {

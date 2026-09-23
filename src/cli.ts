@@ -147,7 +147,7 @@ program
 
       if (!targetFinding) {
         console.error(`\n${pc.red('✗ Finding not found:')} '${findingId}' across project audit results.\n`);
-        process.exit(1);
+        process.exit(4);
       }
 
       const { explainFinding } = await import('./core/explain.js');

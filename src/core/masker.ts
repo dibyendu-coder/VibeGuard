@@ -33,10 +33,19 @@ export function maskSecret(val: string): string {
   }
 
   // Handle URL with embedded password e.g. postgres://user:password@host:port/db
-  const urlMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)([^:]+):([^@]+)(@.+)$/);
-  if (urlMatch) {
-    const [, protocol, user, , rest] = urlMatch;
-    return `${protocol}${user}:********${rest}`;
+  const schemeMatch = trimmed.match(/^([a-zA-Z][a-zA-Z0-9+.-]*:\/\/)(.*)$/);
+  if (schemeMatch) {
+    const [, protocol, body] = schemeMatch;
+    const lastAtIdx = body.lastIndexOf('@');
+    if (lastAtIdx > 0) {
+      const creds = body.substring(0, lastAtIdx);
+      const rest = body.substring(lastAtIdx);
+      const firstColonIdx = creds.indexOf(':');
+      if (firstColonIdx > 0) {
+        const user = creds.substring(0, firstColonIdx);
+        return `${protocol}${user}:********${rest}`;
+      }
+    }
   }
 
   // Check known prefixes
