@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import fs from 'fs';
 import path from 'path';
 import pc from 'picocolors';
 import { runScan } from './orchestrator/scanner.js';
@@ -7,19 +8,67 @@ import { renderJsonReport } from './reporter/json.js';
 import { renderSarifReport } from './reporter/sarif.js';
 import { renderApiSurface, renderTerminalReport } from './reporter/terminal.js';
 import { createBaseline } from './core/baseline.js';
+import { runInteractiveMenu } from './reporter/menu.js';
+
+function resolveTarget(targetArg: string = '.'): string {
+  const resolved = path.resolve(targetArg);
+  if (fs.existsSync(resolved) && fs.statSync(resolved).isFile()) {
+    return path.dirname(resolved);
+  }
+  return resolved;
+}
 
 const program = new Command();
 
 program
   .name('vibeguard')
   .description('Terminal-first pre-production security and production-readiness auditor for AI/vibe-coded applications')
-  .version('0.1.0', '-v, --version', 'Output the current version of VibeGuard');
+  .version('0.1.0', '-v, --version', 'Output the current version of VibeGuard')
+  .option('--no-color', 'Disable colored terminal output')
+  .action(async (options) => {
+    const isNoColor = options.color === false || process.env.NO_COLOR !== undefined;
+    await runInteractiveMenu({ noColor: isNoColor });
+  });
+
+program
+  .command('menu')
+  .description('Launch the interactive control center with banner and feature selection')
+  .option('--no-color', 'Disable colored terminal output')
+  .action(async (options) => {
+    const isNoColor = options.color === false || process.env.NO_COLOR !== undefined;
+    await runInteractiveMenu({ noColor: isNoColor });
+  });
+
+program
+  .command('dashboard [target]')
+  .alias('web')
+  .description('Launch the professional interactive web dashboard in your browser')
+  .option('-p, --port <port>', 'Dashboard server port', '4200')
+  .option('--no-open', 'Do not automatically open browser')
+  .option('--no-color', 'Disable colored terminal output')
+  .option('-o, --output <file>', 'Save static HTML report to specific path')
+  .action(async (targetArg = '.', options) => {
+    try {
+      const targetPath = resolveTarget(targetArg);
+      const { launchDashboard } = await import('./reporter/server.js');
+      await launchDashboard(targetPath, {
+        port: parseInt(options.port, 10) || 4200,
+        openBrowser: options.open !== false,
+        noColor: options.color === false || process.env.NO_COLOR !== undefined,
+        outputFile: options.output,
+      });
+    } catch (err: any) {
+      console.error(`\n${pc.red('✗ Dashboard Error:')} ${err.message || err}\n`);
+      process.exit(3);
+    }
+  });
 
 program
   .command('scan [target]')
   .description('Perform a pre-production audit of a project directory')
   .option('--json', 'Output results as machine-readable JSON')
   .option('--sarif', 'Output results as SARIF format')
+  .option('--html [file]', 'Save results as interactive HTML web dashboard')
   .option('--no-color', 'Disable colored terminal output')
   .option('--no-banner', 'Disable full startup banner')
   .option('--deep', 'Perform deep multi-file analysis & application graph audit')
@@ -30,7 +79,7 @@ program
   .option('--baseline <file>', 'Use baseline file to suppress existing findings')
   .action(async (targetArg = '.', options) => {
     try {
-      const targetPath = path.resolve(targetArg);
+      const targetPath = resolveTarget(targetArg);
       const isNoColor = options.color === false || process.env.NO_COLOR !== undefined;
 
       // Print Startup Banner if interactive terminal & not suppressed
@@ -51,6 +100,13 @@ program
         severity: options.severity,
         baseline: options.baseline,
       });
+
+      if (options.html) {
+        const { renderHtmlDashboard } = await import('./reporter/html.js');
+        const htmlPath = typeof options.html === 'string' ? path.resolve(options.html) : path.resolve(targetPath, 'vibeguard-report.html');
+        fs.writeFileSync(htmlPath, renderHtmlDashboard(scanResult), 'utf-8');
+        console.log(`\n${isNoColor ? '✓' : pc.green('✓')} HTML Dashboard saved to: ${isNoColor ? htmlPath : pc.cyan(htmlPath)}\n`);
+      }
 
       if (options.json) {
         console.log(renderJsonReport(scanResult));
@@ -82,7 +138,7 @@ program
   .option('--no-color', 'Disable colored terminal output')
   .action(async (targetArg = '.', options) => {
     try {
-      const targetPath = path.resolve(targetArg);
+      const targetPath = resolveTarget(targetArg);
       const isNoColor = options.color === false || process.env.NO_COLOR !== undefined;
       const scanResult = await runScan({ targetPath, noColor: isNoColor });
       console.log(renderApiSurface(scanResult.routes || [], isNoColor));
@@ -99,7 +155,7 @@ program
   .option('--no-color', 'Disable colored terminal output')
   .action(async (targetArg = '.', options) => {
     try {
-      const targetPath = path.resolve(targetArg);
+      const targetPath = resolveTarget(targetArg);
       const isNoColor = options.color === false || process.env.NO_COLOR !== undefined;
       const scanResult = await runScan({ targetPath, noColor: isNoColor });
       console.log(`\nFINDINGS (${scanResult.findings.length})\n`);
@@ -119,7 +175,7 @@ program
   .option('--no-color', 'Disable colored terminal output')
   .action(async (targetArg = '.', options) => {
     try {
-      const targetPath = path.resolve(targetArg);
+      const targetPath = resolveTarget(targetArg);
       const isNoColor = options.color === false || process.env.NO_COLOR !== undefined;
       const scanResult = await runScan({ targetPath, noColor: isNoColor, noBanner: true });
       console.log(renderTerminalReport(scanResult, isNoColor));
@@ -137,7 +193,7 @@ program
   .option('--target <target>', 'Target project path', '.')
   .action(async (findingId, options) => {
     try {
-      const targetPath = path.resolve(options.target || '.');
+      const targetPath = resolveTarget(options.target || '.');
       const isNoColor = options.color === false || process.env.NO_COLOR !== undefined;
       const scanResult = await runScan({ targetPath, noColor: isNoColor, noBanner: true });
 
@@ -167,7 +223,7 @@ baselineCmd
   .option('-o, --output <file>', 'Output baseline file path', '.vibeguard-baseline.json')
   .action(async (targetArg = '.', options) => {
     try {
-      const targetPath = path.resolve(targetArg);
+      const targetPath = resolveTarget(targetArg);
       const scanResult = await runScan({ targetPath });
       const baseline = createBaseline(scanResult.findings, options.output);
       console.log(`\n✓ Created baseline file '${options.output}' with ${baseline.findingsCount} fingerprints.\n`);
@@ -185,4 +241,4 @@ program.on('command:*', () => {
   process.exit(4);
 });
 
-program.parse(process.argv);
+await program.parseAsync(process.argv);

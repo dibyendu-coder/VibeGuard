@@ -2,6 +2,10 @@
 
 > **AI-Native Pre-Production Security, Reliability, and Production Readiness Auditor** for applications built with traditional coding or AI/vibe-coding tools.
 
+<p align="center">
+  <img src="assets/vibeguard-dashboard.jpg" alt="VibeGuard Web Dashboard" width="900">
+</p>
+
 ---
 
 ## 🌟 Overview
@@ -65,7 +69,33 @@ vibeguard --version
 
 ## 📖 CLI Usage & Command Reference
 
-### 1. Perform a Full Audit (`vibeguard scan`)
+### 0. Interactive Control Center (`vibeguard` or `vibeguard menu`)
+Launches the interactive banner and feature selection control center where you can choose which action to run:
+```bash
+vibeguard
+# or
+vibeguard menu
+```
+
+<p align="center">
+  <img src="assets/vibeguard-cli.jpg" alt="VibeGuard Interactive CLI Interface" width="850">
+</p>
+
+### 1. Interactive Web Dashboard (`vibeguard dashboard`)
+Launches a web dashboard view with dark mode, audit matrix scorecards, interactive finding filters, code evidence previews, API surface map, and an interactive **Command Guide** explaining what happens in each audit step:
+```bash
+# Launch interactive dashboard server and open in browser:
+vibeguard dashboard example-target
+
+# Or save static HTML report without starting a server:
+vibeguard scan example-target --html
+```
+
+<p align="center">
+  <img src="assets/vibeguard-dashboard.jpg" alt="VibeGuard Web Dashboard" width="850">
+</p>
+
+### 2. Perform a Full Audit (`vibeguard scan`)
 Audits the current target directory and renders a production readiness summary:
 ```bash
 vibeguard scan .
@@ -75,38 +105,38 @@ Deep multi-file application graph scan:
 vibeguard scan . --deep
 ```
 
-### 2. Filter Audit by Dimension (`--category`)
+### 3. Filter Audit by Dimension (`--category`)
 Focus on a specific auditing category (e.g., `reliability`, `deployment`, `configuration`, `security`):
 ```bash
 vibeguard scan . --category reliability
 vibeguard scan . --category deployment
 ```
 
-### 3. Display Production Readiness Summary (`vibeguard summary`)
+### 4. Display Production Readiness Summary (`vibeguard summary`)
 Renders a high-level Production Readiness matrix table:
 ```bash
 vibeguard summary .
 ```
 
-### 4. Explain Findings Without AI (`vibeguard explain <id>`)
+### 5. Explain Findings Without AI (`vibeguard explain <id>`)
 Get detailed, structured remediation guidance (WHAT, WHERE, WHY, HOW, IMPACT, HOW TO FIX) for any finding ID deterministically:
 ```bash
 vibeguard explain VBG-REL-001 --target .
 ```
 
-### 5. Inspect Discovered API Surface (`vibeguard routes`)
+### 6. Inspect Discovered API Surface (`vibeguard routes`)
 Lists all discovered HTTP endpoints (Express, Next.js, Flask, FastAPI) with authorization and risk flags:
 ```bash
 vibeguard routes .
 ```
 
-### 6. List All Findings (`vibeguard findings`)
+### 7. List All Findings (`vibeguard findings`)
 Displays all active findings sorted by severity:
 ```bash
 vibeguard findings .
 ```
 
-### 7. Baseline Management (`vibeguard baseline`)
+### 8. Baseline Management (`vibeguard baseline`)
 Suppress existing legacy findings for clean incremental auditing:
 ```bash
 # Create baseline from current state
@@ -116,7 +146,7 @@ vibeguard baseline create . -o .vibeguard-baseline.json
 vibeguard scan . --baseline .vibeguard-baseline.json
 ```
 
-### 8. Machine-Readable Export (`--json` / `--sarif`)
+### 9. Machine-Readable Export (`--json` / `--sarif`)
 Export results for CI/CD pipelines, GitHub Security tab, or IDE integrations:
 ```bash
 vibeguard scan . --json > report.json

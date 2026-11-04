@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderBanner, renderCompactStatusMark } from '../src/reporter/banner.ts';
 import { maskSecret } from '../src/reporter/terminal.ts';
+import { renderFeatureList } from '../src/reporter/menu.ts';
 
 describe('Banner and Terminal Utilities', () => {
   it('renders ASCII logo when noColor is set to true', () => {
@@ -24,5 +25,16 @@ describe('Banner and Terminal Utilities', () => {
     const masked = maskSecret('sk_live_1234567890abcdef');
     expect(masked).toBe('sk_live_****************');
     expect(masked).not.toContain('1234567890abcdef');
+  });
+
+  it('renders interactive feature menu options', () => {
+    const menuNoColor = renderFeatureList(true);
+    expect(menuNoColor).toContain('VIBEGUARD FEATURE MENU');
+    expect(menuNoColor).toContain('[1] Scan Project');
+    expect(menuNoColor).toContain('[2] Scan Project (Deep Analysis)');
+
+    const menuColor = renderFeatureList(false);
+    expect(menuColor).toContain('VIBEGUARD INTERACTIVE CONTROL CENTER');
+    expect(menuColor).toContain('[1]');
   });
 });

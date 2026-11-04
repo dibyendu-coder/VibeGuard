@@ -2,6 +2,7 @@ import path from 'path';
 import { describe, expect, it } from 'vitest';
 import { runScan } from '../src/orchestrator/scanner.js';
 import { renderJsonReport } from '../src/reporter/json.js';
+import { renderHtmlDashboard } from '../src/reporter/html.js';
 
 describe('Scan Orchestrator & CLI output', () => {
   it('executes scan on fixture directory successfully', async () => {
@@ -25,5 +26,17 @@ describe('Scan Orchestrator & CLI output', () => {
     const parsed = JSON.parse(jsonStr);
     expect(parsed.project.name).toBe('sample-nextjs');
     expect(jsonStr).not.toMatch(/\x1B\[[0-9;]*[a-zA-Z]/);
+  });
+
+  it('generates professional interactive HTML web dashboard', async () => {
+    const fixtureDir = path.resolve(__dirname, '../fixtures/sample-nextjs');
+    const scanResult = await runScan({ targetPath: fixtureDir });
+
+    const html = renderHtmlDashboard(scanResult);
+    expect(html).toContain('<!DOCTYPE html>');
+    expect(html).toContain('VibeGuard Audit Dashboard');
+    expect(html).toContain('Production Readiness Dimensions');
+    expect(html).toContain('Command Guide & Architecture');
+    expect(html).toContain('Export JSON Report');
   });
 });
