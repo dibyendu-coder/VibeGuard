@@ -7,7 +7,6 @@ This directory contains a complete example application designed to test all feat
 ## 📁 Files Included
 
 - **`app.js`**: An Express server demonstrating common AI/vibe-coding security vulnerabilities and production readiness issues:
-  - 🔑 Hardcoded secrets (Stripe API key & PostgreSQL connection URI)
   - 💉 SQL injection via unsanitized query parameters
   - ⚡ Dynamic command execution (`child_process.exec`)
   - 📂 Path traversal via unsanitized file path
@@ -16,7 +15,7 @@ This directory contains a complete example application designed to test all feat
   - 🛑 Synchronous blocking I/O inside an HTTP route handler (`fs.readFileSync`)
   - ⚠️ Error disclosure leaking server stack traces
   - 🔒 Sensitive endpoint missing authorization
-- **`.env`**: Committed environment variables with production debug flags and credentials.
+- **`.env.example`**: Sanitized environment variables template (copy to `.env` for local testing; `.env` is git-ignored).
 - **`Dockerfile`**: Docker container configured to run as root using `:latest` base image.
 - **`package.json`**: Application dependency manifest.
 

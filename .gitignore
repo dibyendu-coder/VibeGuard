@@ -7,3 +7,7 @@ coverage/
 vibeguard-report.html
 *-report.html
 .vibeguard-baseline.json
+example-target/.env
+.env
+.env.local
+.env.*.local

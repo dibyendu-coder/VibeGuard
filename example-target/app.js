@@ -16,9 +16,9 @@ app.use(express.json());
 // 1. [SECURITY / CORS]: Insecure wildcard CORS configuration
 app.use(cors({ origin: '*' }));
 
-// 2. [SECURITY / SECRETS]: Hardcoded database credentials & mock API key
-const DATABASE_URL = 'postgres://dbuser:SuperSecretPassword2026@127.0.0.1:5432/production_db';
-const STRIPE_SECRET = 'vbg_test_mock_api_key_51Oz01234567890abcdef';
+// 2. [CONFIGURATION / SECRETS]: Load connection strings from runtime environment
+const DATABASE_URL = process.env.DATABASE_URL || 'postgres://user:placeholder_password@127.0.0.1:5432/example_db';
+const API_SECRET = process.env.API_SECRET_KEY || '';
 const pool = new Pool({ connectionString: DATABASE_URL });
 
 // 3. [SECURITY / INJECTION]: SQL Injection via string concatenation
